@@ -13,9 +13,23 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 import os
 from pathlib import Path
 import datetime
+from dotenv import load_dotenv
+
+
+load_dotenv()
+
+
+secret_key = os.getenv("SECRET_KEY")
+email_host_user = os.getenv("EMAIL_HOST_USER")
+email_host_password = os.getenv("EMAIL_HOST_PASSWORD")
+name = os.getenv("NAME")
+user = os.getenv("USER")
+port = os.getenv("PORT")
+password = os.getenv("PASSWORD")
 
 
 
+SECRET_KEY = secret_key
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -23,7 +37,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-8c1w(*fd-i9_75xo*sdk85fomzm1u5h-y%_goky&0(-)zr5gho'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -67,9 +80,9 @@ SIMPLE_JWT = {
     "BLACKLIST_AFTER_ROTATION": True,
     'UPDATE_LAST_LOGIN': True,
 
-    # 'SLIDING_TOKEN_REFRESH_EXP_CLAIM': 'refresh_exp',
-    # 'SLIDING_TOKEN_LIFETIME': datetime.timedelta(minutes=5),
-    # 'SLIDING_TOKEN_REFRESH_LIFETIME': datetime.timedelta(days=1),
+    'SLIDING_TOKEN_REFRESH_EXP_CLAIM': 'refresh_exp',
+    'SLIDING_TOKEN_LIFETIME': datetime.timedelta(minutes=5),
+    'SLIDING_TOKEN_REFRESH_LIFETIME': datetime.timedelta(days=1),
     
     
 }
@@ -164,10 +177,10 @@ AUTHENTICATION_BACKENDS = [
 DATABASES = {
     'default':{
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'User',
-        'USER': 'postgres',
-        'PORT': '5432',
-        'PASSWORD': 'admin',
+        'NAME': name,
+        'USER': user,
+        'PORT': port,
+        'PASSWORD': password,
         'HOST': 'localhost'  
     }
 }
@@ -176,24 +189,11 @@ DATABASES = {
 # myproject/myproject/settings.py (Configure email settings)
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_HOST_USER = 'howellsdemilade2007@gmail.com'
-EMAIL_HOST_PASSWORD = 'lpvwugrygfojxxij'
+EMAIL_HOST_USER = email_host_user
+EMAIL_HOST_PASSWORD = email_host_password
 EMAIL_PORT = 465
 EMAIL_USE_SSL = True
 # EMAIL_USE_TLS = False
 
 
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
-        },
-    },
-    'root': {
-        'handlers': ['console'],
-        'level': 'DEBUG',  # Set the desired log level
-    },
-}
 

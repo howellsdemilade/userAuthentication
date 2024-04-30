@@ -4,8 +4,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from django.core.mail import send_mail
 from rest_framework.permissions import AllowAny
-from django.contrib.auth import authenticate, login, logout
-from rest_framework.authtoken.models import Token
+from django.contrib.auth import login, logout
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.urls import reverse
@@ -16,14 +15,12 @@ from django.template.loader import render_to_string
 from django.utils.encoding import force_str
 from django.urls import reverse
 from django.contrib.auth.hashers import make_password, check_password
-from rest_framework.authtoken.models import Token
-from django.utils.crypto import get_random_string
 from .token import account_activation_token
 from rest_framework_simplejwt.tokens import RefreshToken
 
 
 
-
+ 
 
 
 @api_view(['POST'])
@@ -127,8 +124,51 @@ def ActivationView(request, uidb64, token):
             return JsonResponse({'message': 'Activation not found .'})
 
         return JsonResponse({'message': 'Your account has been activated successfully. You can now login.'})
+    
 
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def LoginView(request):
+    if request.method == 'POST':
+        username = request.data.get('username')
+        password = request.data.get('password')
+        
+        if not username:
+            return JsonResponse({'error': 'Username is required'})
+        
+        if not password:
+            return JsonResponse({'error': 'Password is required'})
+        # user = CustomUser.objects.filter(username=username, password=password).first()
+        try:
+            user = CustomUser.objects.get(username=username)
+        except CustomUser.DoesNotExist:
+            return JsonResponse({'error': 'Invalid credentials'})
 
+        # Check password
+        if not check_password(password, user.password):  # Compare hashed passwords
+            return JsonResponse({'error': 'Invalid credentials'})
+        
+        if user is None:
+            return JsonResponse({'error': 'Authentication failed'}) 
+
+        if user.status != 'active':
+            return JsonResponse({'error': 'User is not active'})
+        # Login user
+        login(request, user)
+
+         # Generate JWT tokens
+        refresh = RefreshToken.for_user(user)
+        access_token = str(refresh.access_token)
+        refresh_token = str(refresh)
+
+        return JsonResponse({
+            'username': user.username,
+            'email': user.email,
+            'access_token': access_token,
+            'refresh_token': refresh_token,
+            'message': 'Login Successful!'
+        })
+    return JsonResponse({'error': 'Method not allowed'})
 
 
 @api_view(['POST'])
@@ -200,52 +240,6 @@ def SetNewPasswordView(request, uidb64, token):
 
         except Exception as e:
             return Response({"message": "Something went wrong. Please try again."})
-
+        
     return render(request, 'set_new_password.html', context)
 
-
-
-
-@api_view(['POST'])
-@permission_classes([AllowAny])
-def LoginView(request):
-    if request.method == 'POST':
-        username = request.data.get('username')
-        password = request.data.get('password')
-        
-        if not username:
-            return JsonResponse({'error': 'Username is required'})
-        
-        if not password:
-            return JsonResponse({'error': 'Password is required'})
-        # user = CustomUser.objects.filter(username=username, password=password).first()
-        try:
-            user = CustomUser.objects.get(username=username)
-        except CustomUser.DoesNotExist:
-            return JsonResponse({'error': 'Invalid credentials'})
-
-        # Check password
-        if not check_password(password, user.password):  # Compare hashed passwords
-            return JsonResponse({'error': 'Invalid credentials'})
-        
-        if user is None:
-            return JsonResponse({'error': 'Authentication failed'}) 
-
-        if user.status != 'active':
-            return JsonResponse({'error': 'User is not active'})
-        # Login user
-        login(request, user)
-
-         # Generate JWT tokens
-        refresh = RefreshToken.for_user(user)
-        access_token = str(refresh.access_token)
-        refresh_token = str(refresh)
-
-        return JsonResponse({
-            'username': user.username,
-            'email': user.email,
-            'access_token': access_token,
-            'refresh_token': refresh_token,
-            'message': 'Login Successful!'
-        })
-    return JsonResponse({'error': 'Method not allowed'})
